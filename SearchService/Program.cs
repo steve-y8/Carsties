@@ -1,19 +1,14 @@
-using AuctionService.Data;
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
+using MongoDB.Entities;
+using SearchService.Data;
+using SearchService.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
-builder.Services.AddDbContext<AuctionDbContext>(opt =>
-{
-	opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
 
-// Inject AutoMapper
-// AutoMapper helps mapping entities to DTOs
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());    // Will look for any classes that derived from Profile class
+builder.Services.AddControllers();
 
 // Inject MassTransit.
 // MassTransit provides a consistent abstraction on top of the supported message transports.
@@ -36,7 +31,7 @@ app.MapControllers();
 
 try
 {
-	DbInitializer.InitDb(app);
+	await DbInitializer.InitDb(app);
 }
 catch(Exception e)
 {
