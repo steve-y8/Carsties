@@ -10,7 +10,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SearchService", "SearchService\SearchService.csproj", "{F46675D0-6BF4-4467-ABD1-84FEE093DE27}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SearchService", "SearchService\SearchService.csproj", "{F46675D0-6BF4-4467-ABD1-84FEE093DE27}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "Contracts\Contracts.csproj", "{804097A8-0A33-42E2-B619-44E4C17FCE6D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +28,10 @@ Global
 		{F46675D0-6BF4-4467-ABD1-84FEE093DE27}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F46675D0-6BF4-4467-ABD1-84FEE093DE27}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F46675D0-6BF4-4467-ABD1-84FEE093DE27}.Release|Any CPU.Build.0 = Release|Any CPU
+		{804097A8-0A33-42E2-B619-44E4C17FCE6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{804097A8-0A33-42E2-B619-44E4C17FCE6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{804097A8-0A33-42E2-B619-44E4C17FCE6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{804097A8-0A33-42E2-B619-44E4C17FCE6D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

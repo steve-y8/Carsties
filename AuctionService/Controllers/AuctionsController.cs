@@ -2,6 +2,8 @@
 using AuctionService.DTOs;
 using AuctionService.Entities;
 using AutoMapper;
+using Contracts;
+using MassTransit;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,11 +18,14 @@ public class AuctionsController : ControllerBase
 
 	private readonly IMapper _mapper;
 
-    public AuctionsController(AuctionDbContext context, IMapper mapper)
+	private readonly IPublishEndpoint _publishEndpoint;
+
+	public AuctionsController(AuctionDbContext context, IMapper mapper, IPublishEndpoint publishEndpoint)
     {
         _context = context;
         _mapper = mapper;
-    }
+		_publishEndpoint = publishEndpoint;
+	}
 
 	[HttpGet]
 	public async Task<ActionResult<List<AuctionDto>>> GetAllAuctions()
@@ -49,9 +54,15 @@ public class AuctionsController : ControllerBase
 
 		_context.Auctions.Add(auction);
 
-		var result = await _context.SaveChangesAsync() > 0;
+		var result = await _context.SaveChangesAsync() > 0;	// Will throw exception if DB is down
 
-		if(!result)
+		var newAuction = _mapper.Map<AuctionDto>(auction);
+
+		// Publish AuctionCreated message to the message queue
+		// If RabbitMQ is down, we will not have data concistency between AuctionService DB and SearchService DB
+		await _publishEndpoint.Publish(_mapper.Map<AuctionCreated>(newAuction));
+
+		if (!result)
 		{
 			return BadRequest("Could not save changes to the DB");
 		}
@@ -79,6 +90,11 @@ public class AuctionsController : ControllerBase
 
 		var result = await _context.SaveChangesAsync() > 0;
 
+		var auctionUpdated = _mapper.Map<AuctionUpdated>(updateAuctionDto);
+		auctionUpdated.Id = id.ToString();
+
+		await _publishEndpoint.Publish(auctionUpdated);
+
 		if(result) 
 		{ 
 			return Ok(); 
@@ -102,6 +118,10 @@ public class AuctionsController : ControllerBase
 		_context.Auctions.Remove(auction);
 
 		var result = await _context.SaveChangesAsync() > 0;
+
+		var auctionDeleted = new AuctionDeleted() { Id = id.ToString() };
+
+		await _publishEndpoint.Publish(auctionDeleted);
 
 		if(!result) 
 		{
