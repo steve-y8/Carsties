@@ -1,5 +1,6 @@
 using AuctionService.Data;
 using MassTransit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,10 +27,26 @@ builder.Services.AddMassTransit(x =>
 	});
 });
 
+// Inject Authentication service
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+	.AddJwtBearer(options =>
+	{
+		// How are we going to validate the token for this resource server
+
+		// Tell this resource server who the token was issued by
+		options.Authority = builder.Configuration["IdentityServiceUrl"];
+		options.RequireHttpsMetadata = false;
+		options.TokenValidationParameters.ValidateAudience = false;
+        
+		// username claim is in the token. Refer to IdentityService.Services.CustomProfileService
+        options.TokenValidationParameters.NameClaimType = "username";	
+	});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
+app.UseAuthentication();	// Middleware for Authentication service. Has to come before UseAuthorization
 app.UseAuthorization();
 
 app.MapControllers();

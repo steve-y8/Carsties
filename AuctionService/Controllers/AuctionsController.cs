@@ -4,6 +4,7 @@ using AuctionService.Entities;
 using AutoMapper;
 using Contracts;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -45,12 +46,14 @@ public class AuctionsController : ControllerBase
 		return _mapper.Map<AuctionDto>(auction);
 	}
 
+	[Authorize]
 	[HttpPost]
 	public async Task<ActionResult<AuctionDto>> CreateAuction(CreateAuctionDto auctionDto)
 	{
 		var auction = _mapper.Map<Auction>(auctionDto);
-		// TODO: add current user as seller
-		auction.Seller = "test";
+		
+		auction.Seller = User.Identity.Name;	// User is a property in ControllerBase class
+												// User.Identity.Name is the NameClaimType configured in the Authentication service (Program.cs)
 
 		_context.Auctions.Add(auction);
 
@@ -70,6 +73,7 @@ public class AuctionsController : ControllerBase
 		return CreatedAtAction(nameof(GetAuctionById), new {auction.Id}, _mapper.Map<AuctionDto>(auction));
 	}
 
+	[Authorize]
 	[HttpPut("{id}")]
 	public async Task<ActionResult> UpdateAuction(Guid id, UpdateAuctionDto updateAuctionDto)
 	{
@@ -80,7 +84,7 @@ public class AuctionsController : ControllerBase
 			return NotFound();
 		}
 
-		// TODO: check seller == username
+		if (auction.Seller != User.Identity.Name) return Forbid();	// User is a property in the ControllerBase class
 
 		auction.Item.Make = updateAuctionDto.Make ?? auction.Item.Make;
 		auction.Item.Model = updateAuctionDto.Model ?? auction.Item.Model;
@@ -103,6 +107,7 @@ public class AuctionsController : ControllerBase
 		return BadRequest("Problem saving changes");
 	}
 
+	[Authorize]
 	[HttpDelete("{id}")]
 	public async Task<ActionResult> DeleteAuction(Guid id)
 	{
@@ -113,9 +118,9 @@ public class AuctionsController : ControllerBase
 			return NotFound();
 		}
 
-		// TODO: check seller == username
+		if (auction.Seller != User.Identity.Name) return Forbid();  // User is a property in the ControllerBase class
 
-		_context.Auctions.Remove(auction);
+        _context.Auctions.Remove(auction);
 
 		var result = await _context.SaveChangesAsync() > 0;
 
