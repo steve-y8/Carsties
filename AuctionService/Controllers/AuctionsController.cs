@@ -57,13 +57,16 @@ public class AuctionsController : ControllerBase
 
 		_context.Auctions.Add(auction);
 
-		var result = await _context.SaveChangesAsync() > 0;	// Will throw exception if DB is down
+        var newAuction = _mapper.Map<AuctionDto>(auction);
 
-		var newAuction = _mapper.Map<AuctionDto>(auction);
+        // Publish AuctionCreated message to the message queue
+        // If RabbitMQ is down, Publish() will timed out and throw an exception.
+		// To prevent this, we have message outbox setted up.
+		// If RabbitMQ is down, the message will persist in the outbox, and Publish() will not timed out.
+		// When RabbitMQ is up again, the message will be sent.
+        await _publishEndpoint.Publish(_mapper.Map<AuctionCreated>(newAuction));
 
-		// Publish AuctionCreated message to the message queue
-		// If RabbitMQ is down, we will not have data concistency between AuctionService DB and SearchService DB
-		await _publishEndpoint.Publish(_mapper.Map<AuctionCreated>(newAuction));
+        var result = await _context.SaveChangesAsync() > 0;	// Will throw exception if DB is down
 
 		if (!result)
 		{
@@ -92,14 +95,19 @@ public class AuctionsController : ControllerBase
 		auction.Item.Mileage = updateAuctionDto.Mileage ?? auction.Item.Mileage;
 		auction.Item.Year = updateAuctionDto.Year ?? auction.Item.Year;
 
-		var result = await _context.SaveChangesAsync() > 0;
-
 		var auctionUpdated = _mapper.Map<AuctionUpdated>(updateAuctionDto);
 		auctionUpdated.Id = id.ToString();
 
-		await _publishEndpoint.Publish(auctionUpdated);
+        // Publish AuctionCreated message to the message queue
+        // If RabbitMQ is down, Publish() will timed out and throw an exception.
+        // To prevent this, we have message outbox setted up.
+        // If RabbitMQ is down, the message will persist in the outbox, and Publish() will not timed out.
+        // When RabbitMQ is up again, the message will be sent.
+        await _publishEndpoint.Publish(auctionUpdated);
 
-		if(result) 
+        var result = await _context.SaveChangesAsync() > 0;
+
+        if (result) 
 		{ 
 			return Ok(); 
 		}
@@ -122,13 +130,18 @@ public class AuctionsController : ControllerBase
 
         _context.Auctions.Remove(auction);
 
-		var result = await _context.SaveChangesAsync() > 0;
-
 		var auctionDeleted = new AuctionDeleted() { Id = id.ToString() };
 
-		await _publishEndpoint.Publish(auctionDeleted);
+        // Publish AuctionCreated message to the message queue
+        // If RabbitMQ is down, Publish() will timed out and throw an exception.
+        // To prevent this, we have message outbox setted up.
+        // If RabbitMQ is down, the message will persist in the outbox, and Publish() will not timed out.
+        // When RabbitMQ is up again, the message will be sent.
+        await _publishEndpoint.Publish(auctionDeleted);
 
-		if(!result) 
+        var result = await _context.SaveChangesAsync() > 0;
+
+        if (!result) 
 		{
 			return BadRequest("Could not update DB");
 		}

@@ -34,6 +34,19 @@ namespace IdentityService
 					ClientSecrets = new []{new Secret("NotASecret".Sha256())},
 					AllowedGrantTypes = {GrantType.ResourceOwnerPassword}	// Use user password to get token from IdentityServer
 																			// ResourceOwnerPassword grant type will be deprecated in OAuth 2.1
+				},
+
+				new Client
+				{
+					ClientId = "nextApp",
+					ClientName = "NextApp",
+					ClientSecrets = {new Secret("secret".Sha256())},
+					AllowedGrantTypes = GrantTypes.CodeAndClientCredentials,
+					RequirePkce = false,
+					RedirectUris = {"http://localhost:3000/api/auth/callback/id-server"},
+					AllowOfflineAccess = true,
+					AllowedScopes = {"openid", "profile", "auctionApp"},
+					AccessTokenLifetime = 3600*24*30
 				}
 			};
 	}

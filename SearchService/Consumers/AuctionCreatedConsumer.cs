@@ -33,5 +33,6 @@ public class AuctionCreatedConsumer : IConsumer<AuctionCreated>
 		var item = _mapper.Map<Item>(context.Message);
 
 		await item.SaveAsync();	// If MongoDB is down, we will not have data concistency between AuctionService DB and SearchService DB
+								// To prevent this, we have configured retry policy in Program.cs
 	}
 }

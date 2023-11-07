@@ -17,13 +17,14 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());    // W
 builder.Services.AddMassTransit(x =>
 {
 	// Define consumers
-	x.AddConsumersFromNamespaceContaining<AuctionCreatedConsumer>();
-	x.AddConsumersFromNamespaceContaining<AuctionUpdatedConsumer>();
-	x.AddConsumersFromNamespaceContaining<AuctionDeletedConsumer>();
+	//x.AddConsumersFromNamespaceContaining<AuctionCreatedConsumer>();
+	x.AddConsumer<AuctionCreatedConsumer>();
+	x.AddConsumer<AuctionUpdatedConsumer>();
+	x.AddConsumer<AuctionDeletedConsumer>();
+	x.AddConsumer<BidPlacedConsumer>();
+	x.AddConsumer<AuctionFinishedConsumer>();
 
 	// This is to distinguish the AConsumer in this service from AConsumer of another service
-	x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("search", false));
-	x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("search", false));
 	x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("search", false));
 
 	// Using RabbitMQ as the service bus

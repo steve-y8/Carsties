@@ -1,3 +1,4 @@
+using AuctionService.Consumers;
 using AuctionService.Data;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,6 +21,25 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());    // W
 // MassTransit provides a consistent abstraction on top of the supported message transports.
 builder.Services.AddMassTransit(x =>
 {
+	// If the message queue is down when publishing a message,
+	// persist the message in an outbox.
+	x.AddEntityFrameworkOutbox<AuctionDbContext>(o =>
+	{
+		o.QueryDelay = TimeSpan.FromSeconds(10);
+
+		o.UsePostgres();
+		o.UseBusOutbox();
+	});
+
+    // Define message consumers
+    //x.AddConsumersFromNamespaceContaining<AuctionCreatedFaultConsumer>();
+	x.AddConsumer<AuctionCreatedFaultConsumer>();
+	x.AddConsumer<BidPlacedConsumer>();
+	x.AddConsumer<AuctionFinishedConsumer>();
+
+    // This is to distinguish the AConsumer in this service from AConsumer of another service
+    x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("auction", false));
+
 	// Using RabbitMQ as the service bus
 	x.UsingRabbitMq((context, cfg) =>
 	{
