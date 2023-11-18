@@ -4,6 +4,10 @@ using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 
+// If running the service in Docker,
+// the environment property in docker-compose.yml will override the properties in configuration files
+// such as appsettings.json, appsettings.Development.json, and launchSettings.json
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -43,6 +47,14 @@ builder.Services.AddMassTransit(x =>
 	// Using RabbitMQ as the service bus
 	x.UsingRabbitMq((context, cfg) =>
 	{
+		cfg.Host(builder.Configuration["RabbitMq:Host"], "/", host =>
+		{
+            // If Username and Password are not provided in the config file,
+            // use guest as the Username and Password
+            host.Username(builder.Configuration.GetValue("RabbitMq:Username", "guest"));
+			host.Password(builder.Configuration.GetValue("RabbitMq:Password", "guest"));
+		});
+
 		cfg.ConfigureEndpoints(context);
 	});
 });

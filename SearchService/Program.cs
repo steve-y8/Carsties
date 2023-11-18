@@ -17,12 +17,12 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());    // W
 builder.Services.AddMassTransit(x =>
 {
 	// Define consumers
-	//x.AddConsumersFromNamespaceContaining<AuctionCreatedConsumer>();
-	x.AddConsumer<AuctionCreatedConsumer>();
-	x.AddConsumer<AuctionUpdatedConsumer>();
-	x.AddConsumer<AuctionDeletedConsumer>();
-	x.AddConsumer<BidPlacedConsumer>();
-	x.AddConsumer<AuctionFinishedConsumer>();
+	x.AddConsumersFromNamespaceContaining<AuctionCreatedConsumer>();
+	//x.AddConsumer<AuctionCreatedConsumer>();
+	//x.AddConsumer<AuctionUpdatedConsumer>();
+	//x.AddConsumer<AuctionDeletedConsumer>();
+	//x.AddConsumer<BidPlacedConsumer>();
+	//x.AddConsumer<AuctionFinishedConsumer>();
 
 	// This is to distinguish the AConsumer in this service from AConsumer of another service
 	x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("search", false));
@@ -30,6 +30,14 @@ builder.Services.AddMassTransit(x =>
 	// Using RabbitMQ as the service bus
 	x.UsingRabbitMq((context, cfg) =>
 	{
+		cfg.Host(builder.Configuration["RabbitMq:Host"], "/", host =>
+		{
+            // If Username and Password are not provided in the config file,
+            // use guest as the Username and Password
+            host.Username(builder.Configuration.GetValue("RabbitMq:Username", "guest"));
+            host.Password(builder.Configuration.GetValue("RabbitMq:Password", "guest"));
+        });
+
 		// Configure message retry for search-auction-created queue if AuctionCreatedConsumer failed.
 		cfg.ReceiveEndpoint("search-auction-created", e =>
 		{
@@ -39,20 +47,20 @@ builder.Services.AddMassTransit(x =>
 		});
 
 		// Configure message retry for search-auction-updated queue if AuctionUpdatedConsumer failed.
-		cfg.ReceiveEndpoint("search-auction-updated", e =>
+		/*cfg.ReceiveEndpoint("search-auction-updated", e =>
 		{
 			e.UseMessageRetry(r => r.Interval(5, 5));
 
 			e.ConfigureConsumer<AuctionUpdatedConsumer>(context);
-		});
+		});*/
 
 		// Configure message retry for search-auction-deleted queue if AuctionDeletedConsumer failed.
-		cfg.ReceiveEndpoint("search-auction-deleted", e =>
+		/*cfg.ReceiveEndpoint("search-auction-deleted", e =>
 		{
 			e.UseMessageRetry(r => r.Interval(5, 5));
 
 			e.ConfigureConsumer<AuctionDeletedConsumer>(context);
-		});
+		});*/
 
 		// Configure the endpoints for all defined consumers.
 		cfg.ConfigureEndpoints(context);
